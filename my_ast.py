@@ -21,7 +21,15 @@ def pptokens(tokens):
     return " ".join([x.value for x in tokens])
 
 def parse_exp(exp):
-    pass
+    stack = []
+    for token in exp:
+        if token.tokentype in ["NUMBER", "VARIABLE"]:
+            stack.append(token)
+        if token.tokentype == "OPERATOR":
+            arg1, arg2 = stack.pop(), stack.pop()
+            node = ast_node(token, [arg1, arg2])
+            stack.append(node)
+    print(stack)
 
 order = {
     "+": 1,
@@ -49,6 +57,10 @@ def infix_to_postfix(tokens):
                 stack.append(token)
 
             else:
+                if len(stack) == 0:
+                    print("Syntax error, mismatched parenthesis")
+                    print("No idea what line it's on!")
+                    sys.exit(1)
                 while not(stack[-1].value == "("):
                     output.append(stack.pop())
                 stack.pop()
@@ -95,7 +107,8 @@ while t != []:
                 print(pptokens(exp))
                 x = infix_to_postfix(exp)
                 print(pptokens(x))
-                parsed = parse_exp(exp)
+                parsed = parse_exp(x)
+                print(parsed)
                 ast.append(parsed)
     else:
         pass
