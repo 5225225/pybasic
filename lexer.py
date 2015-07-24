@@ -17,6 +17,7 @@ class token:
         # VARIABLE
         # OPERATOR
         # LABEL
+        # PAREN
         # EOC
 
     def __repr__(self):
@@ -133,6 +134,12 @@ while True:
 
     elif currword == "\n":
         tokens.append(token("EOC", "NEWLINE"))
+
+    elif currword == "(":
+        tokens.append(token("PAREN", "("))
+
+    elif currword == ")":
+        tokens.append(token("PAREN", ")"))
 
     elif currword == ":":
         while True:

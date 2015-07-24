@@ -1,3 +1,1 @@
-PRINT "HELLO WORLD"
-LET X = 5
-PRINT 2 * X
+PRINT (12 + 3) * 4
