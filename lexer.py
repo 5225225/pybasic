@@ -1,28 +1,13 @@
 import sys
 import string
-import json
+import pickle
+import util
+
+
 
 linenum = 1
 
-class token:
-    def __init__(self, tokentype, value):
-        self.tokentype = tokentype
-        self.value = value
-        self.linenum = linenum
-        # Valid tokentypes
 
-        # KEYWORD
-        # STRING
-        # NUMBER
-        # VARIABLE
-        # OPERATOR
-        # LABEL
-        # PAREN
-        # EOC
-
-    def __repr__(self):
-        return "token({}, {}) line:{}".format(self.tokentype,
-        self.value, self.linenum)
 
 def getchar():
     global holdchr
@@ -81,7 +66,7 @@ while True:
                 pushchar(ch)
                 break
             currword += ch
-        tokens.append(token("NUMBER", currword))
+        tokens.append(util.token("NUMBER", currword, linenum))
 
     elif currword in OPERATORS:
         while True:
@@ -92,7 +77,7 @@ while True:
                 pushchar(ch)
                 break
             currword += ch
-        tokens.append(token("OPERATOR", currword))
+        tokens.append(util.token("OPERATOR", currword, linenum))
 
     elif currword == '"': 
         ending = currword
@@ -103,7 +88,7 @@ while True:
             currword += ch
             if ch == ending:
                 break
-        tokens.append(token("STRING", currword[1:-1]))
+        tokens.append(util.token("STRING", currword[1:-1], linenum))
 
     elif currword in string.ascii_letters:
         # We don't know if this is going to be a variable name or a keyword
@@ -123,9 +108,9 @@ while True:
                     break
         else:
             if currword in KEYWORDS:
-                tokens.append(token("KEYWORD", currword))
+                tokens.append(util.token("KEYWORD", currword, linenum))
             else:
-                tokens.append(token("VARIABLE", currword))
+                tokens.append(util.token("VARIABLE", currword, linenum))
     elif currword == "'":
         while True:
             ch = getchar()
@@ -133,13 +118,13 @@ while True:
                 break
 
     elif currword == "\n":
-        tokens.append(token("EOC", "NEWLINE"))
+        tokens.append(util.token("EOC", "NEWLINE", linenum))
 
     elif currword == "(":
-        tokens.append(token("PAREN", "("))
+        tokens.append(util.token("PAREN", "(", linenum))
 
     elif currword == ")":
-        tokens.append(token("PAREN", ")"))
+        tokens.append(util.token("PAREN", ")", linenum))
 
     elif currword == ":":
         while True:
@@ -148,10 +133,9 @@ while True:
                 pushchar(ch)
                 break
             currword += ch
-        tokens.append(token("LABEL", currword[1:]))
+        tokens.append(util.token("LABEL", currword[1:], linenum))
     elif currword == ",":
-        tokens.append(token("DELIM", ","))
+        tokens.append(util.token("DELIM", ",", linenum))
 
-    
-for item in tokens: 
-    print("{}|{}".format(item.tokentype, item.value))
+
+sys.stdout.buffer.write(pickle.dumps(tokens))

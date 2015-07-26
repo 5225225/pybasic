@@ -1,21 +1,7 @@
 import sys
+import pickle
+import util
 
-
-class token:
-    def __init__(self, tokentype, value):
-        self.tokentype = tokentype
-        self.value = value
-
-    def __repr__(self):
-        return "token({}, {})".format(self.tokentype, self.value)
-
-class ast_node:
-    def __init__(self, token, children=[]):
-        self.token = token
-        self.children = children
-
-    def __repr__(self):
-        return "({}) {}".format(self.token, self.children)
 
 def pptokens(tokens):
     return " ".join([x.value for x in tokens])
@@ -27,9 +13,9 @@ def parse_exp(exp):
             stack.append(token)
         if token.tokentype == "OPERATOR":
             arg1, arg2 = stack.pop(), stack.pop()
-            node = ast_node(token, [arg1, arg2])
+            node = util.ast_node(token, [arg1, arg2])
             stack.append(node)
-    print(stack)
+    return stack
 
 order = {
     "+": 1,
@@ -37,6 +23,14 @@ order = {
     "*": 2,
     "/": 2,
 }
+
+def print_tree(x, indent=0):
+    if type(x) is token:
+        print(" "*indent + x.value)
+    else:
+        print(" "*indent + x.token.value)
+        for item in x.children:
+            print_tree(item, indent+1)
 
 def infix_to_postfix(tokens):
     output = []
@@ -57,12 +51,13 @@ def infix_to_postfix(tokens):
                 stack.append(token)
 
             else:
-                if len(stack) == 0:
+                try:
+                    while not(stack[-1].value == "("):
+                        output.append(stack.pop())
+                except ValueError:
                     print("Syntax error, mismatched parenthesis")
                     print("No idea what line it's on!")
                     sys.exit(1)
-                while not(stack[-1].value == "("):
-                    output.append(stack.pop())
                 stack.pop()
 
 
@@ -76,9 +71,7 @@ def infix_to_postfix(tokens):
 tokens = []
 ast = []
 
-for line in sys.stdin.readlines():
-    ttype, val = line.strip().split("|")
-    tokens.append(token(ttype, val))
+tokens = pickle.loads(sys.stdin.buffer.read())
 
 t = tokens[:]
 assert t is not tokens
@@ -91,7 +84,7 @@ while t != []:
         if currt.value == "PRINT":
             toprint = t.pop(0)
             if toprint.tokentype == "STRING":
-                node = ast_node(currt, [toprint])
+                node = util.ast_node(currt, [util.ast_node(toprint)])
                 ast.append(node)
             else:
                 exp = [toprint]
@@ -104,12 +97,12 @@ while t != []:
                     else:
                         print("Unexpected token in PRINT statement")
                         sys.exit(1)
-                print(pptokens(exp))
                 x = infix_to_postfix(exp)
-                print(pptokens(x))
                 parsed = parse_exp(x)
-                print(parsed)
-                ast.append(parsed)
+                ast.append(util.ast_node(currt, parsed))
+                # No idea WHY it needs a [0], TODO figure it out
     else:
         pass
 
+
+sys.stdout.buffer.write(pickle.dumps(ast))
